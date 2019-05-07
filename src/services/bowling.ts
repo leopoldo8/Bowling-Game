@@ -20,7 +20,7 @@ export default class Bowling {
         return this.value;
     }
 
-    public roll(pins: number | Rolls) {
+    public roll(pins: number | Rolls) {  
         const err = 'Should not be able to roll after game is over';
         if (this.lock) {
             throw new Error(err);
@@ -35,12 +35,12 @@ export default class Bowling {
         }
 
         this.lastIndex = -2;
-        if (typeof pins === 'number') {
-            this.rolls.push(pins);
+        if (typeof pins === "number") {
+            this.rolls.push(pins)
             this.mapFrames();
         } else {
-            pins.map((a: number) => {
-                this.rolls.push(a);
+            pins.map(a => {
+                this.rolls.push(a)
                 this.mapFrames();
             });
         }
@@ -51,20 +51,17 @@ export default class Bowling {
     }
 
     private countScore() {
-        this.values = this.frames.map((frame: Array<{roll: number}>, index: number) => {
+        this.values = this.frames.map((frame: {roll: number}[], index: number) => {
             const firstThrow: number = frame[0].roll;
             const secondThrow: number = frame[1] ? frame[1].roll : 0;
             const thirdThrow: number = frame[2] ? frame[2].roll : 0;
             let nextOneThrow: number = 0;
             let nextTwoThrow: number = 0;
 
-            const nextFrame: any[] = this.frames[index + 1];
-            const nextSecondFrame: any[] = this.frames[index + 2];
-
-            if (nextFrame) {
-                nextOneThrow = nextFrame[0].roll;
-                if (nextFrame[1] || nextSecondFrame) {
-                    nextTwoThrow = nextFrame[1] ? nextFrame[1].roll : nextSecondFrame[0].roll;
+            if (this.frames[index + 1]) {
+                nextOneThrow = this.frames[index + 1][0].roll;
+                if (this.frames[index + 1][1] || this.frames[index + 2]) {
+                    nextTwoThrow = this.frames[index + 1][1] ? this.frames[index + 1][1].roll : this.frames[index + 2][0].roll;
                 }
             }
 
@@ -98,12 +95,12 @@ export default class Bowling {
     }
 
     private recursiveFrame(roll: number, index: number, nextRollValue?: number, lastRollValue?: number): any[] {
-        const lastFrameExists: boolean = this.frames[9] && this.frames[9][2] !== undefined;
-        const overLastFrame: boolean = lastFrameExists && this.frames[9][2].index >= index;
-        const rollAlreadyUsed: boolean = index === this.lastIndex;
+        if (this.lock) { return [] };
+        if (this.frames[9] && this.frames[9][2] !== undefined && this.frames[9][2].index >= index) { return []; }
 
-        if (this.lock || overLastFrame || rollAlreadyUsed) { return []; }
         if (roll < 0 || roll > 10) { throw new Error('Pins must have a value from 0 to 10'); }
+
+        if (index === this.lastIndex) { return []; }
 
         this.lastIndex = index;
         const nextIndex: number = index + 1;
@@ -111,32 +108,16 @@ export default class Bowling {
 
         if (lastRollValue !== undefined) {
             this.lock = true;
-            return [{
-                roll,
-                index: index - 2,
-            }, {
-                roll: nextRollValue,
-                index: index - 1,
-            }, {
-                roll: lastRollValue,
-                index,
-            }];
+            return [{ roll, index: index - 2 }, { roll: nextRollValue, index: index - 1 }, { roll: lastRollValue, index }];
         }
 
         const tenFrameExists: boolean = this.frames.length >= 10 && this.frames[9][0] !== undefined;
-        const secondThrowTenFrame: boolean = this.frames[9][1] !== undefined;
-        const lastFrameWithSecondThrow: boolean = secondThrowTenFrame && this.rolls.length - 3 <= index;
-        const lastFrame: boolean = this.rolls.length - 2 <= index;
-        const onLastFrame: boolean = secondThrowTenFrame && this.rolls.length - 2 === index;
-        const onTenFrame: boolean = tenFrameExists && lastFrame && lastFrameWithSecondThrow;
-        const onSecondThrowOfTenFrame: boolean = tenFrameExists && onLastFrame;
+        const onTenFrame: boolean = tenFrameExists && (this.rolls.length - 2 <= index || this.rolls.length - 3 <= index && this.frames[9][1] !== undefined);
+        const onSecondThrowOfTenFrame: boolean = tenFrameExists && this.rolls.length - 2 === index && this.frames[9][1] !== undefined;
 
         if (nextRollValue === undefined) {
             if (roll === 10 && !onTenFrame || nextRoll === undefined) {
-                return [{
-                    roll,
-                    index,
-                }];
+                return [{ roll, index }];
             }
 
             return this.recursiveFrame(roll, nextIndex, nextRoll);
@@ -156,13 +137,7 @@ export default class Bowling {
             throw new Error(err);
         }
 
-        return [{
-            roll,
-            index: index - 1,
-        }, {
-            roll: nextRollValue,
-            index,
-        }];
+        return [{ roll, index: index - 1 }, { roll: nextRollValue, index }];
     }
 
 }
