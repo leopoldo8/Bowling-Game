@@ -1,21 +1,25 @@
 <template>
   <div class="home">
-    <div class="bkg_logo">
-      <img alt="logo" src="../assets/logo.png" width="150">
-    </div>
+    <p class="message" v-if="this.game.lock">The game's over! Click <span @click="resetGame">here</span> to restart.</p>
+    <p>Total score: {{game.score()}}</p>
     <div class="frames">
-      <div class="frame" v-for="frame in game.frames" :key="frame[0].index">
-        <div class="roll" v-for="roll in frame" :key="roll.index">{{roll.roll}}</div>
+      <div class="frame-box" v-for="(frame, index) in game.frames" :key="frame[0].index">
+        <p>Frame {{index+1}}</p>
+        <div class="frame">
+          <div class="rolls">
+            <div class="roll" v-for="roll in frame" :key="roll.index">{{rollValue(frame, roll)}}</div>
+          </div>
+        <p>{{game.values[index]}}</p>
+        </div>
       </div>
-      <div style="margin-left: 20px">Score: {{game.score()}}</div>
     </div>
     <div class="game">
       <div class="pins">
         <div :class="['pin', `pin_${pin}`]" v-for="pin in pins" :key="pin"/>
       </div>
       <div class="arrow" :style="{transform: `rotate(${angle}deg)`}" />
+      <button @click="stop">Throw</button>
     </div>
-    <button @click="stop">Throw</button>
   </div>
 </template>
 
@@ -34,10 +38,17 @@ export default class Home extends Vue {
   private interval: number = 0;
   private game: any = new Bowling();
   private pins: number = 10;
-  private timeout: number = 10;
+  private timeout: number = .1;
   private throwStreak: number = 0;
+  private lock: boolean = false;
 
   public start() {
+    if (this.game.lock) {
+      this.lock = true;
+      return;
+    }
+
+    this.lock = false;
     this.interval = setInterval(() => {
       if (this.angle < 90 && this.go) {
         this.angle++;
@@ -51,26 +62,56 @@ export default class Home extends Vue {
   }
 
   public stop() {
+    if (this.lock) { return; }
     clearInterval(this.interval);
-    const pinsOut = Math.round(Math.sin((this.angle + 90) * Math.PI / 180) * this.pins);
+    const pinsOut = Math.round((Math.sin((this.angle + 90) * Math.PI / 180) * this.pins) - .45);
     this.game.roll(pinsOut);
     this.pins = this.pins - pinsOut;
     this.throwStreak++;
     if (this.throwStreak >= 2 || pinsOut === 10) {
-      this.resetGame(() => {
+      this.lock = true;
+      this.resetPins(() => {
+        if (this.game.lock) {
+          this.lock = true;
+          return;
+        }
         return this.start();
-      })
+      });
     } else {
       return this.start();
     }
   }
 
-  private resetGame(callback: () => void) {
+  private rollValue(frame: Array<{roll: number, index: number}>, roll: {roll: number, index: number}) {
+    const strike: boolean = roll.roll === 10;
+    const square: boolean = frame[1] && frame[1].roll + frame[0].roll === 10 && frame[1].index === roll.index;
+
+    const onThirdThrow: boolean = frame[2] && frame[2].index === roll.index;
+    const squareOnTenFrame: boolean = onThirdThrow && frame[0].roll === 10 && frame[1].roll + frame[2].roll === 10;
+
+    if (strike) {
+      return 'X';
+    } else if (squareOnTenFrame || square) {
+      return '/';
+    }
+
+    return roll.roll;
+  }
+
+  private resetGame() {
+    this.resetPins(() => {
+      this.game = new Bowling();
+      this.lock = false;
+      this.start();
+    });
+  }
+
+  private resetPins(callback: () => void) {
     if (this.pins < 10) {
       setTimeout(() => {
         this.throwStreak = 0;
         this.pins++;
-        return this.resetGame(callback);
+        return this.resetPins(callback);
       }, 200);
     } else {
       callback();
@@ -84,26 +125,43 @@ export default class Home extends Vue {
 </script>
 
 <style lang="sass" scoped>
-  .bkg_logo
-    width: 150px
-    height: 150px
-    border-radius: 100%
-    background-color: #49648e
-    margin: 0 auto
-    display: flex
-    justify-content: center
-    align-items: center
+  .message
+    color: red
+    span
+      text-decoration: underline
+      cursor: pointer
 
   .frames
     display: flex
     margin: 20px auto
     width: fit-content
-    .frame
-      margin: 0 10px
-      .roll
-        width: 20px
-        height: 20px
-        border: 1px solid black
+
+    .frame-box
+      display: flex
+      flex-flow: nowrap column
+      .frame
+        $border: 1px solid black
+        margin: 0 10px
+        width: 62px
+        height: 50px
+        border: $border
+        display: flex
+        flex-flow: nowrap column
+
+        .rolls
+          display: flex
+          flex-flow: nowrap row
+          justify-content: flex-end
+          width: 100%
+          .roll
+            width: 20px
+            height: 20px
+            border-bottom: $border
+            border-left: $border
+
+        p
+          margin: 0
+          margin-top: 5px
 
   .game
     display: flex
@@ -159,7 +217,8 @@ export default class Home extends Vue {
 
 
     .arrow
-      margin-top: 200px
+      margin-top: 225px
+      margin-bottom: 15px
       width: 50px
       height: 150px
       background: #49648e
