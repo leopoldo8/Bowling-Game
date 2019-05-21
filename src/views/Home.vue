@@ -212,11 +212,13 @@ export default class Home extends Vue {
 
 <style lang="sass" scoped>
   .home
-    display: flex
-    justify-content: space-evenly
-    height: calc(100% - 90px)
+    height: calc(100% - 110px)
+    position: relative
 
     .game-info
+      position: absolute
+      left: 20px
+      top: 0
       .message
         color: red
         margin-bottom: 30px
@@ -269,6 +271,7 @@ export default class Home extends Vue {
       flex-flow: nowrap column
       margin-top: 20px
       overflow: hidden
+      height: 100%
 
       .pins
         width: 342px
