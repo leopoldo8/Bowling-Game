@@ -99,8 +99,7 @@ export default class Bowling {
     }
 
     private recursiveFrame(roll: number, index: number, nextRollValue?: number, lastRollValue?: number): any[] {
-        if (this.lock || index === this.lastIndex) { return []; }
-        if (this.frames[9] && this.frames[9][2] !== undefined && this.frames[9][2].index >= index) { return []; }
+        if (this.lock || index <= this.lastIndex) { return []; }
 
         if (roll < 0 || roll > 10) { throw new Error('Pins must have a value from 0 to 10'); }
 
@@ -109,6 +108,7 @@ export default class Bowling {
         const nextRoll = this.rolls[nextIndex];
 
         if (lastRollValue !== undefined) {
+            // tenth frame
             this.lock = true;
             return [{
                 roll,
@@ -122,16 +122,21 @@ export default class Bowling {
             }];
         }
 
-        const onlastsRoll: boolean = this.rolls.length - 2 <= index;
-        const onlastRoll: boolean = this.rolls.length - 2 === index;
         const tenFrameExists: boolean = this.frames.length >= 10 && this.frames[9][0] !== undefined;
         const secondThrowTenFrameExists: boolean = this.frames[9] && this.frames[9][1] !== undefined;
+        const onlastsRoll: boolean = this.rolls.length - 2 <= index;
+        const onlastRoll: boolean = (this.rolls.length - 2 === index) || (this.rolls.length - 1 === index);
         const onlastRollTenFrame: boolean = this.rolls.length - 3 <= index && secondThrowTenFrameExists;
         const onTenFrame: boolean = tenFrameExists && (onlastsRoll || onlastRollTenFrame);
-        const onSecondThrowOfTenFrame: boolean = tenFrameExists && onlastRoll && secondThrowTenFrameExists;
+        const onSecondThrowOfTenFrame: boolean = onlastRoll && (secondThrowTenFrameExists || tenFrameExists);
+
+        const lastRoll: boolean = nextRoll === undefined;
 
         if (nextRollValue === undefined) {
-            if (roll === 10 && !onTenFrame || nextRoll === undefined) {
+            // first roll of a frame
+            const strike: boolean = roll === 10;
+
+            if (strike && !onTenFrame || lastRoll) {
                 return [{
                     roll,
                     index,
@@ -143,11 +148,11 @@ export default class Bowling {
 
         const err = 'Pin count exceeds pins on the lane';
 
-        if (onSecondThrowOfTenFrame && nextRoll !== undefined) {
+        if (onSecondThrowOfTenFrame) {
             const spareOrStrike: boolean = roll + nextRollValue >= 10;
-            if (spareOrStrike) {
+            if (spareOrStrike && !lastRoll) {
                 return this.recursiveFrame(roll, nextIndex, nextRollValue, nextRoll);
-            } else {
+            } else if (!spareOrStrike) {
                 this.lock = true;
             }
 
