@@ -26,6 +26,36 @@
     &.router-link-exact-active
       color: #163184
 
+//icomoon
+@font-face
+  font-family: 'icomoon'
+  src:  url('assets/fonts/icomoon.eot?687l6a')
+  src:  url('assets/fonts/icomoon.eot?687l6a#iefix') format('embedded-opentype'), url('assets/fonts/icomoon.ttf?687l6a') format('truetype'), url('assets/fonts/icomoon.woff?687l6a') format('woff'), url('assets/fonts/icomoon.svg?687l6a#icomoon') format('svg')
+  font-weight: normal
+  font-style: normal
+
+
+[class^="icon-"], [class*=" icon-"]
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important
+  speak: none
+  font-style: normal
+  font-weight: normal
+  font-variant: normal
+  text-transform: none
+  line-height: 1
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased
+  -moz-osx-font-smoothing: grayscale
+
+
+.icon-settings:before
+  content: "\e900"
+
+
+
+//reset
 html, body, div, span, applet, object, iframe, h1, h2, h3, h4, h5, h6, p, blockquote, pre, a, abbr, acronym, address, big, cite, code, del, dfn, em, img, ins, kbd, q, s, samp, small, strike, strong, sub, sup, tt, var, b, u, i, center, dl, dt, dd, ol, ul, li, fieldset, form, label, legend, table, caption, tbody, tfoot, thead, tr, th, td, article, aside, canvas, details, embed, figure, figcaption, footer, header, hgroup, menu, nav, output, ruby, section, summary, time, mark, audio, video
   margin: 0
   padding: 0
